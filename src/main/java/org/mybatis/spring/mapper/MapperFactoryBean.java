@@ -25,10 +25,14 @@ import org.springframework.beans.factory.FactoryBean;
 
 /**
  * BeanFactory that enables injection of MyBatis mapper interfaces. It can be set up with a
- * SqlSessionFactory or a pre-configured SqlSessionTemplate.
+ *   or a pre-configured SqlSessionTemplate.
+ *
+ * <p>
+ *     BeanFactory，支持注入MyBatis映射器接口。它可以使用*或预先配置的SqlSessionTemplate进行设置。
+ * </p>
+ *
  * <p>
  * Sample configuration:
- *
  * <pre class="code">
  * {@code
  *   <bean id="baseMapper" class="org.mybatis.spring.mapper.MapperFactoryBean" abstract="true" lazy-init="true">

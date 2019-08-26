@@ -51,7 +51,7 @@ public abstract class AbstractMyBatisSpringTest {
 
   @BeforeAll
   public static void setupBase() throws Exception {
-    // create an SqlSessionFactory that will use SpringManagedTransactions
+    // create an SqlSessionFactory that will use SpringManagedTransactions创建一个将使用SpringManagedTransactions的SqlSessionFactory
     SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
     factoryBean.setMapperLocations(new Resource[] { new ClassPathResource("org/mybatis/spring/TestMapper.xml") });
     // note running without SqlSessionFactoryBean.configLocation set => default configuration
@@ -63,6 +63,32 @@ public abstract class AbstractMyBatisSpringTest {
     sqlSessionFactory = factoryBean.getObject();
 
     txManager = new DataSourceTransactionManager(dataSource);
+  }
+  /*
+   * Setup a new Connection before each test since its closed state will need to be checked
+   * afterwards and there is no Connection.open().
+   * 在每次测试之前设置一个新的Connection，因为它的关闭状态需要在之后检查，并且没有Connection.open（）。
+   *
+   */
+  @BeforeEach
+  public void setupConnection() throws SQLException {
+    dataSource.reset();
+    connection = createMockConnection();
+    connectionTwo = createMockConnection();
+    dataSource.addConnection(connectionTwo);
+    dataSource.addConnection(connection);
+  }
+
+  @BeforeEach
+  public void resetExecutorInterceptor() {
+    executorInterceptor.reset();
+  }
+
+  @AfterEach
+  public void validateConnectionClosed() {
+    assertConnectionClosed(connection);
+
+    connection = null;
   }
 
   protected void assertNoCommit() {
@@ -132,29 +158,6 @@ public abstract class AbstractMyBatisSpringTest {
     return con;
   }
 
-  /*
-   * Setup a new Connection before each test since its closed state will need to be checked
-   * afterwards and there is no Connection.open().
-   */
-  @BeforeEach
-  public void setupConnection() throws SQLException {
-    dataSource.reset();
-    connection = createMockConnection();
-    connectionTwo = createMockConnection();
-    dataSource.addConnection(connectionTwo);
-    dataSource.addConnection(connection);
-  }
 
-  @BeforeEach
-  public void resetExecutorInterceptor() {
-    executorInterceptor.reset();
-  }
-
-  @AfterEach
-  public void validateConnectionClosed() {
-    assertConnectionClosed(connection);
-
-    connection = null;
-  }
 
 }

@@ -15,8 +15,6 @@
  */
 package org.mybatis.spring;
 
-import static org.springframework.util.Assert.notNull;
-
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.ExecutorType;
@@ -32,7 +30,12 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import static org.springframework.util.Assert.notNull;
+
 /**
+ * 处理MyBatis SqlSession生命周期。它可以从  Spring  TransactionSynchronizationManager
+ * 注册并获取SqlSessions。如果没有事务处于活动状态，也可以
+ *
  * Handles MyBatis SqlSession life cycle. It can register and get SqlSessions from
  * Spring {@code TransactionSynchronizationManager}. Also works if no transaction is active.
  *
@@ -42,12 +45,12 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public final class SqlSessionUtils {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SqlSessionUtils.class);
-
+  //空校验产生异常的一些信息，
   private static final String NO_EXECUTOR_TYPE_SPECIFIED = "No ExecutorType specified";
   private static final String NO_SQL_SESSION_FACTORY_SPECIFIED = "No SqlSessionFactory specified";
   private static final String NO_SQL_SESSION_SPECIFIED = "No SqlSession specified";
 
-  /**
+  /**此类无法实例化，仅公开静态实用程序方法。
    * This class can't be instantiated, exposes static utility methods only.
    */
   private SqlSessionUtils() {
@@ -68,7 +71,10 @@ public final class SqlSessionUtils {
     return getSqlSession(sessionFactory, executorType, null);
   }
 
-  /**
+  /**从Spring Transaction Manager获取SqlSession，或者根据需要创建一个新的。
+   * 试图从当前事务中获取SqlSession。如果没有，它会创建一个新的。
+   * 然后，如果Spring TX 开启 + SpringManagedTransactionFactory 配置为事务管理器，
+   * 它将SqlSession与事务同步。
    * Gets an SqlSession from Spring Transaction Manager or creates a new one if needed.
    * Tries to get a SqlSession out of current transaction. If there is not any, it creates a new one.
    * Then, it synchronizes the SqlSession with the transaction if Spring TX is active and
@@ -86,17 +92,19 @@ public final class SqlSessionUtils {
 
     notNull(sessionFactory, NO_SQL_SESSION_FACTORY_SPECIFIED);
     notNull(executorType, NO_EXECUTOR_TYPE_SPECIFIED);
-
+    //此处使用spring的resourceHolder获取当前线程的事务，线程安全
     SqlSessionHolder holder = (SqlSessionHolder) TransactionSynchronizationManager.getResource(sessionFactory);
-
+    //将sessionholder 的资源请求数加1 ,即某处代码要求session持有的资源,
+    // 资源与事务同步型的资源才会进行请求+1。存在现有事务时无法更改ExecutorType
     SqlSession session = sessionHolder(executorType, holder);
     if (session != null) {
       return session;
     }
 
     LOGGER.debug(() -> "Creating a new SqlSession");
+    //如果为null,表明创建一个新的sqlsession,可能是另一个新线程第一次请求创建sqlsession。
     session = sessionFactory.openSession(executorType);
-
+    //将这个session注册到sessionholeder中持有。
     registerSessionHolder(sessionFactory, executorType, exceptionTranslator, session);
 
     return session;
@@ -104,7 +112,7 @@ public final class SqlSessionUtils {
 
   /**
    * Register session holder if synchronization is active (i.e. a Spring TX is active).
-   *
+   *如果同步处于活动状态（即Spring TX处于活动状态），则注册会话持有者 sessionHolder资源注册。
    * Note: The DataSource used by the Environment should be synchronized with the
    * transaction either through DataSourceTxMgr or another tx synchronization.
    * Further assume that if an exception is thrown, whatever started the transaction will
@@ -118,13 +126,15 @@ public final class SqlSessionUtils {
   private static void registerSessionHolder(SqlSessionFactory sessionFactory, ExecutorType executorType,
       PersistenceExceptionTranslator exceptionTranslator, SqlSession session) {
     SqlSessionHolder holder;
+    //如果当前线程的事务同步处于活动状态
     if (TransactionSynchronizationManager.isSynchronizationActive()) {
       Environment environment = sessionFactory.getConfiguration().getEnvironment();
-
+      //如果为spring事务管理工厂。那么进行相应的注册
       if (environment.getTransactionFactory() instanceof SpringManagedTransactionFactory) {
         LOGGER.debug(() -> "Registering transaction synchronization for SqlSession [" + session + "]");
-
+        //1创建holde资源类
         holder = new SqlSessionHolder(session, executorType, exceptionTranslator);
+        //2将其绑定到spring管理的资源中。通过sessionFactory工厂作为key,默认全局唯一一个工厂
         TransactionSynchronizationManager.bindResource(sessionFactory, holder);
         TransactionSynchronizationManager.registerSynchronization(new SqlSessionSynchronization(holder, sessionFactory));
         holder.setSynchronizedWithTransaction(true);
@@ -162,7 +172,8 @@ public final class SqlSessionUtils {
    * Checks if {@code SqlSession} passed as an argument is managed by Spring {@code TransactionSynchronizationManager}
    * If it is not, it closes it, otherwise it just updates the reference counter and
    * lets Spring call the close callback when the managed transaction ends
-   *
+   *检查 SqlSession 作为参数传递是否由Spring管理 TransactionSynchronizationManager
+   *如果不是， 会关闭它，否则只是更新引用计数器并且 让Spring在托管事务结束时调用close回调
    * @param session a target SqlSession
    * @param sessionFactory a factory of SqlSession
    */
@@ -175,14 +186,14 @@ public final class SqlSessionUtils {
       LOGGER.debug(() -> "Releasing transactional SqlSession [" + session + "]");
       holder.released();
     } else {
-      LOGGER.debug(() -> "Closing non transactional SqlSession [" + session + "]");
+      LOGGER.debug(() -> "Closing non  transactionalSqlSession [" + session + "]");
       session.close();
     }
   }
 
   /**
    * Returns if the {@code SqlSession} passed as an argument is being managed by Spring
-   *
+   *由Spring管理，则返回true;
    * @param session a MyBatis SqlSession to check
    * @param sessionFactory the SqlSessionFactory which the SqlSession was built with
    * @return true if session is transactional, otherwise false

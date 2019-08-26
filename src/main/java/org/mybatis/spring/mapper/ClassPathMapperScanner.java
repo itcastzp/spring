@@ -163,6 +163,10 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
     return beanDefinitions;
   }
 
+  /**
+   * 对beanDefinitions的一些处理！！！
+   * @param beanDefinitions
+   */
   private void processBeanDefinitions(Set<BeanDefinitionHolder> beanDefinitions) {
     GenericBeanDefinition definition;
     for (BeanDefinitionHolder holder : beanDefinitions) {
@@ -173,16 +177,18 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
 
       // the mapper interface is the original class of the bean
       // but, the actual class of the bean is MapperFactoryBean
+      //mapper接口是bean的原始类 ,但是事实上是MapperFactoryBean应为他是真正的代理
       definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName); // issue #59
       definition.setBeanClass(this.mapperFactoryBean.getClass());
 
       definition.getPropertyValues().add("addToConfig", this.addToConfig);
-
+      //显式工厂使用false
       boolean explicitFactoryUsed = false;
       if (StringUtils.hasText(this.sqlSessionFactoryBeanName)) {
         definition.getPropertyValues().add("sqlSessionFactory", new RuntimeBeanReference(this.sqlSessionFactoryBeanName));
         explicitFactoryUsed = true;
-      } else if (this.sqlSessionFactory != null) {
+      }
+      else if (this.sqlSessionFactory != null) {
         definition.getPropertyValues().add("sqlSessionFactory", this.sqlSessionFactory);
         explicitFactoryUsed = true;
       }
@@ -193,7 +199,8 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
         }
         definition.getPropertyValues().add("sqlSessionTemplate", new RuntimeBeanReference(this.sqlSessionTemplateBeanName));
         explicitFactoryUsed = true;
-      } else if (this.sqlSessionTemplate != null) {
+      }
+      else if (this.sqlSessionTemplate != null) {
         if (explicitFactoryUsed) {
           LOGGER.warn(() -> "Cannot use both: sqlSessionTemplate and sqlSessionFactory together. sqlSessionFactory is ignored.");
         }

@@ -41,6 +41,11 @@ import org.springframework.util.StringUtils;
  * registered via @Component configuration, whereas implementing
  * {@code BeanDefinitionRegistryPostProcessor} will work for XML configuration.
  *
+ * 一个{@link ImportBeanDefinitionRegistrar}允许*
+ * MyBatis映射器扫描的注释配置。使用@Enable注释允许通过@Component配置来注册bean，
+ * 而实现
+ * {@code BeanDefinitionRegistryPostProcessor}将适用于XML配置。
+ *
  * @author Michael Lanyon
  * @author Eduardo Macarron
  * @author Putthiphong Boonphong
@@ -49,6 +54,7 @@ import org.springframework.util.StringUtils;
  * @see ClassPathMapperScanner
  * @since 1.2.0
  */
+
 public class MapperScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware {
 
   private ResourceLoader resourceLoader;

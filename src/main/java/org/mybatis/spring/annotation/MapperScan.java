@@ -29,29 +29,32 @@ import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.context.annotation.Import;
 
 /**
+ * 使用Java  Config时，使用此注解注册MyBatis映射器接口。
+ * 具有相同作用 MapperScannerConfigurer  MapperScannerRegistrar
+ *
  * Use this annotation to register MyBatis mapper interfaces when using Java
  * Config. It performs when same work as {@link MapperScannerConfigurer} via
  * {@link MapperScannerRegistrar}.
  *
  * <p>Configuration example:</p>
  * <pre class="code">
- * &#064;Configuration
- * &#064;MapperScan("org.mybatis.spring.sample.mapper")
+ * @Configuration
+ * @MapperScan("org.mybatis.spring.sample.mapper")
  * public class AppConfig {
  *
- *   &#064;Bean
+ *   @Bean
  *   public DataSource dataSource() {
  *     return new EmbeddedDatabaseBuilder()
  *              .addScript("schema.sql")
  *              .build();
  *   }
  *
- *   &#064;Bean
+ *   @Bean
  *   public DataSourceTransactionManager transactionManager() {
  *     return new DataSourceTransactionManager(dataSource());
  *   }
  *
- *   &#064;Bean
+ *   @Bean
  *   public SqlSessionFactory sqlSessionFactory() throws Exception {
  *     SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
  *     sessionFactory.setDataSource(dataSource());

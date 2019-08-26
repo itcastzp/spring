@@ -40,38 +40,30 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.StringUtils;
 
 /**
- * BeanDefinitionRegistryPostProcessor that searches recursively starting from a base package for
- * interfaces and registers them as {@code MapperFactoryBean}. Note that only interfaces with at
- * least one method will be registered; concrete classes will be ignored.
- * <p>
- * This class was a {code BeanFactoryPostProcessor} until 1.0.1 version. It changed to  
- * {@code BeanDefinitionRegistryPostProcessor} in 1.0.2. See https://jira.springsource.org/browse/SPR-8269
- * for the details.
- * <p>
- * The {@code basePackage} property can contain more than one package name, separated by either
- * commas or semicolons.
- * <p>
- * This class supports filtering the mappers created by either specifying a marker interface or an
- * annotation. The {@code annotationClass} property specifies an annotation to search for. The
- * {@code markerInterface} property specifies a parent interface to search for. If both properties
- * are specified, mappers are added for interfaces that match <em>either</em> criteria. By default,
- * these two properties are null, so all interfaces in the given {@code basePackage} are added as
- * mappers.
- * <p>
- * This configurer enables autowire for all the beans that it creates so that they are
- * automatically autowired with the proper {@code SqlSessionFactory} or {@code SqlSessionTemplate}.
- * If there is more than one {@code SqlSessionFactory} in the application, however, autowiring
- * cannot be used. In this case you must explicitly specify either an {@code SqlSessionFactory} or
- * an {@code SqlSessionTemplate} to use via the <em>bean name</em> properties. Bean names are used
- * rather than actual objects because Spring does not initialize property placeholders until after
- * this class is processed. 
- * <p>
- * Passing in an actual object which may require placeholders (i.e. DB user password) will fail. 
- * Using bean names defers actual object creation until later in the startup
- * process, after all placeholder substitution is completed. However, note that this configurer
- * does support property placeholders of its <em>own</em> properties. The <code>basePackage</code>
- * and bean name properties all support <code>${property}</code> style substitution.
- * <p>
+ *  BeanDefinitionRegistryPostProcessor，从接口的基础包开始递归搜索，并将它们注册为{@code MapperFactoryBean}。
+ *  请注意，只有至少一种方法的接口才会被注册;具体类将被忽略。
+ *  <p>
+ *      这个类是一个{code BeanFactoryPostProcessor}，
+ *  直到1.0.1版本。它在1.0.2中更改为 {@code BeanDefinitionRegistryPostProcessor}。
+ *  有关详细信息，请参阅 https://jira.springsource.org/browse/SPR-8269
+ *  </p>
+ *  {@code basePackage}属性可以包含多个包名，用,或;分隔。
+ *  <p>
+ *      此类支持过滤通过指定标记接口或*注释创建的映射器。 {@code annotationClass}属性指定要搜索的注释。
+ *      {@code markerInterface}属性指定要搜索的父接口。如果同时指定了两个属性
+ *      ，则会为符合<em> </ em>条件的接口添加映射器。默认情况下，
+ *      这两个属性为null，因此给定{@code basePackage}中的所有接口都被添加为*映射器。
+ *      <p>此配置程序为其创建的所有bean启用自动装配，以便它们
+ *      使用正确的{@code SqlSessionFactory}或{@code SqlSessionTemplate}自动进行自动装配。
+ *      但是，如果应用程序中有多个{@code SqlSessionFactory}，则无法使用自动装配
+ *      。在这种情况下，您必须通过<em> bean name </ em>属性显式指定{@code SqlSessionFactory}或
+ *      {@code SqlSessionTemplate}。使用Bean名称而不是实际对象，因为Spring在处理此类之后才初始化属性占位符。
+ *      <p>
+ *          传入可能需要占位符的实际对象（即数据库用户密码）将失败。
+ *          在完成所有占位符替换之后，使用bean名称将实际对象创建推迟到启动进程的后期。但请注意，此configurer
+ *          支持其<em>自己的</ em>属性的属性占位符。
+ *      <code> basePackage </ code> 和bean名称属性都支持<code> $ {property} </ code>样式替换。
+ *  </p>
  * Configuration sample:
  *
  * <pre class="code">
@@ -120,6 +112,10 @@ public class MapperScannerConfigurer implements BeanDefinitionRegistryPostProces
    * This property lets you set the base package for your mapper interface files.
    * <p>
    * You can set more than one package by using a semicolon or comma as a separator.
+   *
+   * 此属性允许您为映射器接口文件设置基础包。
+   * 您可以使用分号或逗号作为分隔符来设置多个包。将在指定的包中以递归方式搜索映射器。
+   *
    * <p>
    * Mappers will be searched for recursively starting in the specified package(s).
    *
@@ -131,7 +127,7 @@ public class MapperScannerConfigurer implements BeanDefinitionRegistryPostProces
 
   /**
    * Same as {@code MapperFactoryBean#setAddToConfig(boolean)}.
-   *
+   *是否将映射器添加到MyBatis的标志
    * @param addToConfig a flag that whether add mapper to MyBatis or not
    * @see MapperFactoryBean#setAddToConfig(boolean)
    */
@@ -231,6 +227,7 @@ public class MapperScannerConfigurer implements BeanDefinitionRegistryPostProces
 
   /**
    * Specifies a flag that whether execute a property placeholder processing or not.
+   * 指定是否执行属性占位符处理的标志。
    * <p>
    * The default is {@literal false}. This means that a property placeholder processing does not execute.
    * @since 1.1.1
